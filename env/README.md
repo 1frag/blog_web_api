@@ -1,0 +1,23 @@
+## Для работы сервиса необходимо установить следующие переменные:
+
+__pgadmin.env__
+* PGADMIN_DEFAULT_EMAIL
+* PGADMIN_DEFAULT_PASSWORD
+
+__db.env__
+* POSTGRES_USER
+* POSTGRES_PASSWORD
+* POSTGRES_DB
+
+__minio.env__
+* MINIO_ACCESS_KEY
+* MINIO_SECRET_KEY
+
+__web.env__
+* DATABASE_URL
+* AUTHJWT_SECRET_KEY
+* MINIO_ENDPOINT
+* MINIO_ACCESS_KEY
+* MINIO_SECRET_KEY
+* MINIO_BUCKET_NAME
+

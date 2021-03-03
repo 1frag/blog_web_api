@@ -1,0 +1,47 @@
+version: '3.7'
+
+services:
+  web:
+    build: .
+    command: uvicorn core.main:app --reload --workers 1 --host 0.0.0.0 --port 8000
+    volumes:
+      - ./backend/:/code/
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - minio
+    env_file:
+      - env/web.env
+
+  db:
+    image: postgres:13
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - env/db.env
+
+  pgadmin:
+    image: dpage/pgadmin4
+    ports:
+      - "5050:5050"
+    depends_on:
+      - db
+    env_file:
+      - env/pgadmin.env
+
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./storage/minio:/data
+    env_file:
+      - env/minio.env
+    command: server --address 0.0.0.0:9000 /data
+
+volumes:
+  postgres_data:
+  minio_data:
