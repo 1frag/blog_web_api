@@ -46,7 +46,7 @@ class Messages:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
         answer = models.DetailMessage(
-            id=obj["id"], title=obj["title"], created_at=obj["created_at"],
+            id=obj["id"], title=obj["title"], created_at=obj["created_at"].isoformat() + "Z",
             author=obj["author"], media_links=[], text=None, previews=[],
             like_count=obj["like_count"]
         )
