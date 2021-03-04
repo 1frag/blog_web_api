@@ -37,7 +37,7 @@ services:
     ports:
       - "9000:9000"
     volumes:
-      - ./storage/minio:/data
+      - minio_data:/data
     env_file:
       - env/minio.env
     command: server --address 0.0.0.0:9000 /data

@@ -41,7 +41,7 @@ class MediaController:
             name = ".".join([uuid.uuid4().hex, kind.EXTENSION])
             await fp.seek(0)
             await self.minio_client.async_upload_to_minio(
-                settings.minio_bucket_name,
+                settings.minio.bucket_name,
                 f"media/common/{name}",
                 fp.name
             )

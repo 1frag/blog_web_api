@@ -5,7 +5,7 @@ import datetime
 import dotenv
 
 from fastapi_jwt_auth import AuthJWT
-from pydantic import BaseSettings, Field
+from pydantic import BaseSettings, Field, BaseModel
 
 project_path = (pathlib.Path(__file__) / "../..").resolve()
 sys.path.append(str(project_path))
@@ -16,6 +16,7 @@ class MinioSettings(BaseSettings):
     endpoint: str = Field(..., env='minio_endpoint')
     access_key: str = Field(..., env='minio_access_key')
     secret_key: str = Field(..., env='minio_secret_key')
+    bucket_name: str = Field(..., env='minio_bucket_name')
 
 
 class Settings(BaseSettings):
@@ -23,8 +24,7 @@ class Settings(BaseSettings):
     authjwt_secret_key: str
     expiration_token_time: datetime.timedelta = datetime.timedelta(days=5)
     page_size: int = 3
-    minio_keys: dict = Field(..., default_factory=lambda: MinioSettings().dict())
-    minio_bucket_name: str
+    minio: MinioSettings = MinioSettings()
 
 
 settings = Settings()

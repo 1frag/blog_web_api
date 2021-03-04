@@ -29,10 +29,15 @@ class AsyncMinio(minio.Minio):
     @aiomisc.threaded
     def link_to_download_media(self, name):
         return self.presigned_get_object(
-            settings.minio_bucket_name,
+            settings.minio.bucket_name,
             f"media/common/{name}",
         )
 
 
 async def get_minio():
-    yield AsyncMinio(**settings.minio_keys, secure=False)
+    yield AsyncMinio(
+        settings.minio.endpoint,
+        access_key=settings.minio.access_key,
+        secret_key=settings.minio.secret_key,
+        secure=False
+    )

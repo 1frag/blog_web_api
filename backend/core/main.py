@@ -2,12 +2,12 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi_jwt_auth.exceptions import AuthJWTException
 
-from api import auth, chat, media
+from api import auth, blog, media
 
 app = FastAPI(debug=True)
 
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
-app.include_router(chat.router, prefix="/chat", tags=["chat"])
+app.include_router(blog.router, prefix="/chat", tags=["chat"])
 app.include_router(media.router, prefix="/media", tags=["media"])
 
 
