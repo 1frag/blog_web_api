@@ -1,3 +1,5 @@
+import datetime
+
 import aiomisc
 import aiopg.sa
 import minio
@@ -23,6 +25,13 @@ class AsyncMinio(minio.Minio):
     @aiomisc.threaded
     def async_fget_object(self, *args, **kwargs):
         return self.fget_object(*args, **kwargs)
+
+    @aiomisc.threaded
+    def link_to_download_media(self, name):
+        return self.presigned_get_object(
+            settings.minio_bucket_name,
+            f"media/common/{name}",
+        )
 
 
 async def get_minio():

@@ -36,10 +36,6 @@ class Messages:
 
         return models.MessagesResponse(meta=meta, objects=objects)
 
-    @staticmethod
-    def link_to_download_media(media_name):
-        return "/media/download?name=" + media_name
-
     @router.get("/messages/{message_id}")
     async def detail_message(self, message_id: int) -> models.DetailMessage:
         """Получить детальную информацию о сообщении"""
@@ -63,7 +59,7 @@ class Messages:
                 links.append(at["data"])
             elif at["kind"] == "media":
                 answer.media_links.append(
-                    self.link_to_download_media(at["data"])
+                    await self.minio_client.link_to_download_media(at["data"])
                 )
 
         answer.previews = list(await utils.PreviewFetcher()(links))

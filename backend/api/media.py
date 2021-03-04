@@ -33,11 +33,12 @@ class MediaController:
             content = await file.read()
             await fp.write(content)
 
-            if utils.get_valid_type(content) is None:
+            kind = utils.get_valid_type(content)
+            if kind is None:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                                     detail="only video or images supported")
 
-            name = uuid.uuid4().hex
+            name = ".".join([uuid.uuid4().hex, kind.EXTENSION])
             await fp.seek(0)
             await self.minio_client.async_upload_to_minio(
                 settings.minio_bucket_name,
@@ -45,31 +46,3 @@ class MediaController:
                 fp.name
             )
             return models.UploadMediaResponse(status=201, name=name)
-
-    @router.get(
-        "/download",
-        response_class=FileResponse,
-        responses={404: {"models": ...}},
-    )
-    async def download(self, name: str):
-        file_ctx = asynctempfile.NamedTemporaryFile()
-        afp = await file_ctx.__aenter__()
-
-        try:
-            await self.minio_client.async_fget_object(
-                settings.minio_bucket_name,
-                f"media/common/{name}",
-                afp.name,
-            )
-        except minio.error.S3Error:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-
-        await afp.seek(0)
-        kind = utils.get_valid_type(afp.name)
-
-        await afp.seek(0)
-        return FileResponse(
-            afp.name, media_type=kind.MIME,
-            filename=f"{name}.{kind.EXTENSION}",
-            background=file_ctx.__aexit__
-        )
