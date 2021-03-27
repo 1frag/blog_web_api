@@ -1,13 +1,11 @@
 import uuid
 
 from fastapi import Depends, status, HTTPException, File, UploadFile
-from fastapi.responses import FileResponse
 from fastapi_jwt_auth import AuthJWT
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
 
 import asynctempfile
-import minio
 
 from api import models, utils, deps
 from core.config import settings

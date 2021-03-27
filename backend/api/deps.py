@@ -1,17 +1,9 @@
-import datetime
-
 import aiomisc
-import aiopg.sa
 import minio
 
 from fastapi.security import HTTPBearer
 
 from core import settings
-
-
-async def get_db():
-    async with aiopg.sa.create_engine(settings.database_url) as engine:
-        yield engine
 
 
 auth = HTTPBearer()

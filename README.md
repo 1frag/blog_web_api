@@ -21,8 +21,3 @@
 ```bash
 docker-compose up -d --build
 ```
-
-## HTTPS
-Чтобы работать по `https`, вначале необходимо запустить `init-letsencrypt.sh`
-
-[Подробнее](https://pentacent.medium.com/nginx-and-lets-encrypt-with-docker-in-less-than-5-minutes-b4b8a60d3a71)

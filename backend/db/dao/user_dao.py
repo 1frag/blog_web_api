@@ -1,36 +1,22 @@
-import aiopg.sa
-import psycopg2.errors
-
 from typing import Optional
+from tortoise.exceptions import IntegrityError
 
 from api import utils
-from db.models.blog import users, User, engine
+from db.models.blog import User
 
 
 class UsersManager:
-    def __init__(self, conn: aiopg.sa.SAConnection):
-        self.conn = conn
-
     async def add_user(
             self, login: str, password: str,
     ) -> tuple[bool, Optional[str]]:
-
-        query = users.insert().values(
-            login=login, password=utils.get_password(password).decode(),
-        ).compile(bind=engine)
-
         try:
-            await self.conn.execute(str(query), query.params)
-
-        except psycopg2.Error as e:
-            if type(e).__name__ == "UniqueViolation":
+            await User(login=login, password=utils.get_password(password).decode()).save()
+        except IntegrityError as e:
+            if 'unique constraint "user_login_key"' in e.args[0].args[0]:
                 return False, "Login already exists"
             raise e
 
         return True, None
 
-    async def get_by_login(self, login):
-        query = users.select().where(User.login == login).compile()
-        return await (
-            await self.conn.execute(str(query), query.params)
-        ).fetchone()
+    async def get_by_login(self, login: str) -> Optional[User]:
+        return await User.get_or_none(login=login)

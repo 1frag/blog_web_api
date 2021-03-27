@@ -3,10 +3,9 @@ from fastapi_jwt_auth import AuthJWT
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
 
-import aiopg.sa
-
 from api import models, utils, deps
 from core.config import settings
+from db.models.blog import AttachmentKind
 from db.dao.message_dao import MessageManager
 
 
@@ -15,7 +14,6 @@ router = InferringRouter()
 
 @cbv(router)
 class Messages:
-    engine: aiopg.sa.engine.Engine = Depends(deps.get_db)
     minio_client: deps.AsyncMinio = Depends(deps.get_minio)
 
     @router.get("/messages")
@@ -25,39 +23,42 @@ class Messages:
             offset: int = Query(0, ge=0),
     ) -> models.MessagesResponse:
         """Получить список сообщений"""
-        async with self.engine.acquire() as conn:
-            objects = [row async for row in MessageManager(conn).select_all(
-                limit=limit, offset=offset
-            )]
-            meta = utils.build_meta(
-                limit=limit, offset=offset,
-                total=await MessageManager(conn).count()
-            )
+        objects = [row async for row in MessageManager().select_all(
+            limit=limit, offset=offset
+        )]
+        meta = utils.build_meta(
+            limit=limit, offset=offset,
+            total=await MessageManager().count()
+        )
 
         return models.MessagesResponse(meta=meta, objects=objects)
 
     @router.get("/messages/{message_id}")
     async def detail_message(self, message_id: int) -> models.DetailMessage:
         """Получить детальную информацию о сообщении"""
-        async with self.engine.acquire() as conn:
-            obj = await MessageManager(conn).detail(message_id)
+        obj = await MessageManager().detail(message_id)
 
         if not obj:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
         answer = models.DetailMessage(
-            id=obj["id"], title=obj["title"], created_at=obj["created_at"].isoformat() + "Z",
-            author=obj["author"], media_links=[], text=None, previews=[],
+            id=obj["id"],
+            title=obj["title"],
+            created_at=obj["created_at"],
+            author=obj["author"],
+            text=None,
+            media_links=[],
+            previews=[],
             like_count=obj["like_count"]
         )
 
         links = []
         for at in obj["attachments"]:
-            if at["kind"] == "text":
+            if at["kind"] == AttachmentKind.text:
                 answer.text = at["data"]
-            elif at["kind"] == "link":
+            elif at["kind"] == AttachmentKind.link:
                 links.append(at["data"])
-            elif at["kind"] == "media":
+            elif at["kind"] == AttachmentKind.media:
                 answer.media_links.append(
                     await self.minio_client.link_to_download_media(at["data"])
                 )
@@ -84,8 +85,7 @@ class Messages:
         authorize.jwt_required()
         current_user = authorize.get_jwt_subject()
 
-        async with self.engine.acquire() as conn:
-            obj = await MessageManager(conn).create_message(message, current_user)
+        obj = await MessageManager().create_message(message, current_user)
 
         return models.CreateMessageResponse(**obj)
 
@@ -100,14 +100,14 @@ class Messages:
         authorize.jwt_required()
         current_user = authorize.get_jwt_subject()
 
-        async with self.engine.acquire() as conn:
-            obj = await MessageManager(conn).like_message(message_id, current_user)
+        obj = await MessageManager().like_message(message_id, current_user)
 
         if obj is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
         return models.LikeResponse(**obj, status=200)
 
     @router.delete("/messages", response_class=Response, responses={
+        204: {"class": Response},
         403: {"class": Response},
         404: {"class": Response},
     })
@@ -121,7 +121,6 @@ class Messages:
         authorize.jwt_required()
         current_user = authorize.get_jwt_subject()
 
-        async with self.engine.acquire() as conn:
-            rc = await MessageManager(conn).delete_message(message_id, current_user)
+        rc = await MessageManager().delete_message(message_id, current_user)
 
         return Response(status_code=rc)
